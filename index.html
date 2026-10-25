@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inequality Explorer | S1–S3 Mathematics</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-main: #f8fafc;
+      --card-bg: #ffffff;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent-green: #10b981;
+      --accent-green-bg: #ecfdf5;
+      --warning: #eab308;
+      --warning-bg: #fefce8;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+    .modal-card {
+      background: white; border-radius: var(--radius); padding: 2rem;
+      width: 90%; max-width: 440px; box-shadow: var(--shadow);
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .form-group input {
+      width: 100%; padding: 0.75rem; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 1rem; outline: none; transition: all 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+
+    /* Header */
+    header {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .header-container {
+      max-width: 1100px; margin: 0 auto; padding: 0.75rem 1rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 0.5rem;
+    }
+    .app-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    .student-badge {
+      background: #eff6ff; color: var(--primary); font-weight: 600;
+      padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid #bfdbfe;
+    }
+    .top-controls { display: flex; align-items: center; gap: 0.5rem; }
+    .lang-btn, .reset-btn {
+      background: transparent; border: 1px solid var(--border); padding: 0.4rem 0.8rem;
+      border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 600; transition: all 0.2s;
+    }
+    .lang-btn:hover, .reset-btn:hover { background: #f1f5f9; }
+
+    /* Progress Tracker Bar */
+    .course-progress-bar { background: #ffffff; border-bottom: 1px solid var(--border); padding: 0.6rem 1rem; }
+    .course-progress-container { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 1rem; }
+
+    /* Navigation Tabs */
+    nav { background: var(--card-bg); border-bottom: 2px solid var(--border); }
+    .nav-container { max-width: 1100px; margin: 0 auto; display: flex; gap: 0.5rem; padding: 0 1rem; }
+    .nav-tab {
+      padding: 0.85rem 1.25rem; border: none; background: none; font-size: 1rem;
+      font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .nav-tab:hover { color: var(--primary); }
+    .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* Main Area */
+    main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1.5rem 1rem; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem;
+    }
+    .math-display {
+      font-size: 2rem; text-align: center; padding: 1rem;
+      background: #f1f5f9; border-radius: var(--radius); margin: 1rem 0; font-family: serif;
+    }
+
+    .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .level-card {
+      background: var(--card-bg); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem; cursor: pointer; transition: all 0.2s;
+    }
+    .level-card:hover:not(.locked) { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .level-card.locked { opacity: 0.6; cursor: not-allowed; background: #f1f5f9; }
+    .level-card h3 { font-size: 1.1rem; margin-bottom: 0.4rem; color: var(--primary); }
+    .level-card p { font-size: 0.9rem; color: var(--text-muted); }
+    .level-badge {
+      display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 12px; background: var(--accent-green-bg); color: var(--accent-green);
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.75rem 1.25rem; font-size: 1rem; font-weight: 600; border-radius: 8px;
+      border: none; cursor: pointer; min-height: 48px; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #e2e8f0; color: var(--text-dark); }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+    .btn-outline:hover { background: #eff6ff; }
+    .btn-success { background: var(--accent-green); color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+
+    .step-card {
+      border-left: 4px solid var(--primary); background: #f8fafc; padding: 1rem 1.25rem;
+      margin: 0.75rem 0; border-radius: 0 var(--radius) var(--radius) 0; animation: fadeIn 0.3s ease-in-out;
+    }
+    .step-card.warning-step { border-left-color: var(--danger); background: var(--danger-bg); }
+    .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .step-op { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+    .step-card.warning-step .step-op { color: var(--danger); }
+    .step-prop { font-size: 0.8rem; background: #e0f2fe; color: #0369a1; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
+    .step-result { font-size: 1.3rem; margin: 0.4rem 0; font-family: serif; }
+    .step-why { font-size: 0.9rem; color: #475569; }
+
+    .number-line-box { width: 100%; background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; text-align: center; }
+    .number-line-svg { width: 100%; max-width: 650px; height: 85px; }
+
+    .answer-section { background: #f8fafc; padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin: 1rem 0; }
+    .mc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+    .mc-btn { padding: 0.75rem; background: white; border: 2px solid var(--border); border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-family: serif; transition: all 0.2s; }
+    .mc-btn:hover { border-color: var(--primary); background: #eff6ff; }
+    .mc-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
+
+    .nl-mc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; margin-top: 0.75rem; }
+    .nl-option { border: 2px solid var(--border); border-radius: 8px; padding: 0.5rem; cursor: pointer; background: white; transition: all 0.2s; }
+    .nl-option:hover { border-color: var(--primary); }
+    .nl-option.selected { border-color: var(--primary); background: #eff6ff; }
+
+    .feedback-box { padding: 1rem; border-radius: var(--radius); margin: 1rem 0; font-weight: 500; display: none; }
+    .feedback-box.correct { background: var(--accent-green-bg); color: #065f46; border: 1px solid #a7f3d0; display: block; }
+    .feedback-box.incorrect { background: var(--danger-bg); color: #991b1b; border: 1px solid #fecaca; display: block; }
+
+    .symbol-bar { background: var(--card-bg); border-top: 1px solid var(--border); padding: 0.75rem 1rem; margin-top: auto; }
+    .symbol-bar-container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; }
+    .symbol-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; background: #f8fafc; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--border); }
+    .symbol-sym { font-weight: bold; font-size: 1.1rem; color: var(--primary); min-width: 20px; }
+
+    .progress-wrapper { display: flex; align-items: center; gap: 1rem; }
+    .progress-bar-bg { flex: 1; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.4s ease; }
+
+    .callout-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); padding: 1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 600px) {
+      .app-title { font-size: 1.1rem; }
+      .math-display { font-size: 1.5rem; }
+      .nav-tab { padding: 0.6rem 0.8rem; font-size: 0.9rem; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Student Registration Modal -->
+  <div id="studentModal" class="modal-overlay">
+    <div class="modal-card">
+      <h2 style="color:var(--primary); margin-bottom:0.5rem;">👋 Welcome Student!</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.25rem;">Please enter your details to personalize your learning journey and earn your official e-Certificate.</p>
+      
+      <form onsubmit="saveStudentProfile(event)">
+        <div class="form-group">
+          <label for="studentName">Full Name (English / 中文)</label>
+          <input type="text" id="studentName" placeholder="e.g. Chan Tai Man / 陳大文" required>
+        </div>
+        <div class="form-group">
+          <label for="studentClass">Class</label>
+          <input type="text" id="studentClass" placeholder="e.g. S2A" required>
+        </div>
+        <div class="form-group">
+          <label for="studentClassNum">Class Number</label>
+          <input type="number" id="studentClassNum" min="1" max="50" placeholder="e.g. 15" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">Start Exploring →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Persistent Header -->
+  <header>
+    <div class="header-container">
+      <div class="app-title">📐 Inequality Explorer</div>
+      <div class="student-badge" id="headerStudentBadge">👤 Guest Student</div>
+      <div class="top-controls">
+        <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">繁體中文</button>
+        <button class="reset-btn" id="resetProgressBtn" onclick="resetProgress()" data-i18n="reset">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Progress Tracker Header -->
+  <div class="course-progress-bar">
+    <div class="course-progress-container">
+      <span style="font-weight:700; font-size:0.85rem; color:var(--text-dark);" data-i18n="overallProgress">Overall Completion:</span>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="globalProgressFill"></div>
+      </div>
+      <span id="globalProgressText" style="font-weight:700; font-size:0.85rem; color:var(--primary);">0%</span>
+      <button class="btn btn-success" id="certDownloadBtn" onclick="downloadCertificate()" style="display:none; padding:0.3rem 0.8rem; min-height:auto; font-size:0.8rem;">🎓 Get e-Certificate</button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav>
+    <div class="nav-container">
+      <button class="nav-tab active" onclick="switchTab('learn')" id="tab-learn-btn" data-i18n="tabLearn">Learn</button>
+      <button class="nav-tab" onclick="switchTab('practice')" id="tab-practice-btn" data-i18n="tabPractice">Practice</button>
+      <button class="nav-tab" onclick="switchTab('properties')" id="tab-properties-btn" data-i18n="tabProperties">Properties</button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main>
+
+    <!-- TAB 1: LEARN -->
+    <div id="tab-learn" class="tab-content active">
+      <div id="learn-menu">
+        <div class="card">
+          <h2 data-i18n="learnTitle">Guided Worked Examples</h2>
+          <p style="color:var(--text-muted); margin-top:0.25rem;" data-i18n="learnSub">Select a level to explore step-by-step solutions with detailed explanations.</p>
+          <div class="level-grid" id="learn-level-grid"></div>
+        </div>
+      </div>
+
+      <div id="learn-detail" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <button class="btn btn-secondary" onclick="showLearnMenu()" data-i18n="backToMenu">← Back to Menu</button>
+          
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button class="btn btn-outline" id="learn-ex-prev-btn" onclick="prevLearnExample()">← Prev Example</button>
+            <span id="learn-example-counter" style="font-weight:600; color:var(--text-dark); font-size:0.9rem;"></span>
+            <button class="btn btn-outline" id="learn-ex-next-btn" onclick="nextLearnExample()">Next Example →</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="learn-level-title" style="font-weight:700; color:var(--primary);"></span>
+          </div>
+
+          <div class="math-display" id="learn-math-orig"></div>
+
+          <div id="learn-steps-container"></div>
+
+          <div class="number-line-box" id="learn-nl-box" style="display:none;">
+            <svg id="learn-nl-svg" class="number-line-svg"></svg>
+            <div id="learn-nl-caption" style="font-size:0.9rem; color:var(--text-muted); margin-top:0.4rem;"></div>
+          </div>
+
+          <div class="btn-group" id="learn-nav-btns">
+            <button class="btn btn-primary" id="learn-next-btn" onclick="nextLearnStep()" data-i18n="nextStep">Next Step →</button>
+            <button class="btn btn-secondary" id="learn-prev-btn" onclick="prevLearnStep()" data-i18n="prevStep">Previous Step ←</button>
+            <button class="btn btn-outline" onclick="restartLearn()" data-i18n="restart">Restart</button>
+          </div>
+
+          <div id="learn-mc-box" class="card" style="display:none; margin-top:1.5rem; background:#f8fafc; border:1px solid var(--primary);">
+            <h4 style="color:var(--primary); margin-bottom:0.5rem;" data-i18n="checkUnderstanding">Check Your Understanding</h4>
+            <p id="learn-mc-question" style="font-weight:600; margin-bottom:0.75rem;"></p>
+            <div id="learn-mc-options" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+            <div id="learn-mc-feedback" class="feedback-box" style="margin-top:0.75rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PRACTICE -->
+    <div id="tab-practice" class="tab-content">
+      <div id="practice-menu">
+        <div class="card">
+          <h2 data-i18n="practiceTitle">Graded Practice Drills</h2>
+          <p style="color:var(--text-muted); margin-top:0.25rem;" data-i18n="practiceSub">Solve questions to earn stars and unlock higher difficulty levels.</p>
+          <div class="level-grid" id="practice-level-grid"></div>
+        </div>
+      </div>
+
+      <div id="practice-detail" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <button class="btn btn-secondary" onclick="showPracticeMenu()" data-i18n="backToMenu">← Back to Level Menu</button>
+          <div style="font-weight:700; color:var(--primary);" id="practice-level-indicator"></div>
+        </div>
+
+        <div class="card">
+          <div class="progress-wrapper" style="margin-bottom:1rem;">
+            <span style="font-weight:600; font-size:0.9rem;" data-i18n="levelProgress">Level Progress:</span>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="practice-progress-fill"></div>
+            </div>
+            <span id="practice-progress-text" style="font-weight:700; font-size:0.9rem;">0 / 3</span>
+          </div>
+
+          <div class="math-display" id="practice-ineq-display"></div>
+
+          <div class="answer-section">
+            <p style="font-weight:600; margin-bottom:0.5rem;" data-i18n="selectFinalAns">1. Select the correct solution:</p>
+            <div class="mc-grid" id="practice-sol-options"></div>
+
+            <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;" data-i18n="selectNL">2. Which number line shows the graphical solution to the inequality?</p>
+            <div class="nl-mc-grid" id="practice-nl-options"></div>
+          </div>
+
+          <div id="practice-hint-box" class="callout-warning" style="display:none;"></div>
+          <div id="practice-feedback" class="feedback-box"></div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary" id="practice-check-btn" onclick="checkPracticeAnswer()" data-i18n="checkAnswer">Check Answer</button>
+            <button class="btn btn-secondary" onclick="getPracticeHint()" data-i18n="hint">Hint 💡</button>
+            <button class="btn btn-outline" id="practice-sol-btn" onclick="revealPracticeSolution()" data-i18n="showSolution">Show Solution</button>
+            <button class="btn btn-primary" id="practice-next-btn" onclick="nextPracticeQuestion()" style="display:none;" data-i18n="nextQuestion">Next Question →</button>
+          </div>
+
+          <div id="practice-solution-container" style="display:none; margin-top:1.5rem; border-top:2px dashed var(--border); padding-top:1rem;">
+            <h3 style="color:var(--primary); margin-bottom:0.75rem;" data-i18n="fullWorkedSol">Full Step-by-Step Solution</h3>
+            <div id="practice-solution-steps"></div>
+            <div class="number-line-box">
+              <svg id="practice-sol-nl-svg" class="number-line-svg"></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PROPERTIES -->
+    <div id="tab-properties" class="tab-content">
+      <div class="card">
+        <h2 style="color:var(--primary); margin-bottom:1rem;" data-i18n="propTitle">Properties of Inequalities Reference</h2>
+
+        <div class="callout-warning">
+          <h3 style="color:#b45309; display:flex; align-items:center; gap:0.5rem;" data-i18n="keyRuleTitle">⚠️ Golden Rule of Inequalities</h3>
+          <p style="margin-top:0.4rem; font-weight:600;" data-i18n="keyRuleDesc">When you MULTIPLY or DIVIDE both sides by a NEGATIVE number, you MUST REVERSE (flip) the inequality sign!</p>
+          <p style="font-size:0.9rem; margin-top:0.25rem; color:#78350f;" data-i18n="keyRuleExample">Example: 2 < 5, but multiplying by −1 gives −2 > −5.</p>
+        </div>
+
+        <h3 style="margin-top:1.5rem; margin-bottom:0.75rem;" data-i18n="threePropsTitle">The Core Algebraic Properties</h3>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+          <div class="card" style="box-shadow:none; background:#f8fafc;">
+            <h4 style="color:var(--primary);" data-i18n="propAddTitle">1. Addition & Subtraction</h4>
+            <p style="font-size:0.9rem; margin:0.4rem 0;" data-i18n="propAddDesc">Adding or subtracting the same number on both sides keeps the inequality sign <strong>UNCHANGED</strong>.</p>
+            <div style="font-family:serif; font-size:1.05rem; background:white; padding:0.5rem; border-radius:6px; border:1px solid var(--border);">
+              If a > b, then a + c > b + c<br>
+              If a > b, then a − c > b − c
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none; background:#f8fafc;">
+            <h4 style="color:var(--primary);" data-i18n="propPosTitle">2. Multiply / Divide by Positive (+)</h4>
+            <p style="font-size:0.9rem; margin:0.4rem 0;" data-i18n="propPosDesc">Multiplying or dividing both sides by a positive number keeps the sign <strong>UNCHANGED</strong>.</p>
+            <div style="font-family:serif; font-size:1.05rem; background:white; padding:0.5rem; border-radius:6px; border:1px solid var(--border);">
+              If c > 0 and a > b, then ac > bc<br>
+              If c > 0 and a > b, then a/c > b/c
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none; background:#fef2f2; border-color:#fecaca;">
+            <h4 style="color:var(--danger);" data-i18n="propNegTitle">3. Multiply / Divide by Negative (−)</h4>
+            <p style="font-size:0.9rem; margin:0.4rem 0;" data-i18n="propNegDesc">Multiplying or dividing both sides by a negative number <strong>REVERSES</strong> the sign!</p>
+            <div style="font-family:serif; font-size:1.05rem; background:white; padding:0.5rem; border-radius:6px; border:1px solid #fecaca;">
+              If c < 0 and a > b, then ac < bc<br>
+              If c < 0 and a > b, then a/c < b/c
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:1.5rem; margin-bottom:0.75rem;" data-i18n="nlNotationTitle">Number Line Notation Guide</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid var(--border);">
+            <h4 style="color:var(--primary);" data-i18n="strictIneq">Strict Inequalities (< and >)</h4>
+            <p style="font-size:0.9rem;" data-i18n="strictDesc">Use an <strong>OPEN circle ○</strong>. The boundary point is NOT included in the graphical solution.</p>
+          </div>
+          <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid var(--border);">
+            <h4 style="color:var(--primary);" data-i18n="nonStrictIneq">Non-strict Inequalities (≤ and ≥)</h4>
+            <p style="font-size:0.9rem;" data-i18n="nonStrictDesc">Use a <strong>SOLID (filled) circle ●</strong>. The boundary point IS included in the graphical solution.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <canvas id="certCanvas" width="1200" height="850" style="display:none;"></canvas>
+
+  <!-- Symbol Footer Bar -->
+  <footer class="symbol-bar">
+    <div class="symbol-bar-container">
+      <div class="symbol-item">
+        <span class="symbol-sym">&lt;</span>
+        <span data-i18n="symLt">Less than (Open circle ○)</span>
+      </div>
+      <div class="symbol-item">
+        <span class="symbol-sym">&gt;</span>
+        <span data-i18n="symGt">Greater than (Open circle ○)</span>
+      </div>
+      <div class="symbol-item">
+        <span class="symbol-sym">&le;</span>
+        <span data-i18n="symLe">Less than or equal to (Solid circle ●)</span>
+      </div>
+      <div class="symbol-item">
+        <span class="symbol-sym">&ge;</span>
+        <span data-i18n="symGe">Greater than or equal to (Solid circle ●)</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const I18N = {
+      en: {
+        reset: "Reset",
+        tabLearn: "Learn",
+        tabPractice: "Practice",
+        tabProperties: "Properties",
+        learnTitle: "Guided Worked Examples",
+        learnSub: "Select a level to explore step-by-step solutions with detailed explanations.",
+        backToMenu: "← Back to Menu",
+        nextStep: "Next Step →",
+        prevStep: "Previous Step ←",
+        restart: "Restart",
+        checkUnderstanding: "Check Your Understanding",
+        practiceTitle: "Graded Practice Drills",
+        practiceSub: "Solve questions to earn stars and unlock higher difficulty levels.",
+        levelProgress: "Level Progress:",
+        overallProgress: "Overall Completion:",
+        selectFinalAns: "1. Select the correct solution:",
+        selectNL: "2. Which number line shows the graphical solution to the inequality?",
+        checkAnswer: "Check Answer",
+        hint: "Hint 💡",
+        showSolution: "Show Solution",
+        nextQuestion: "Next Question →",
+        fullWorkedSol: "Full Step-by-Step Solution",
+        propTitle: "Properties of Inequalities Reference",
+        keyRuleTitle: "⚠️ Golden Rule of Inequalities",
+        keyRuleDesc: "When you MULTIPLY or DIVIDE both sides by a NEGATIVE number, you MUST REVERSE (flip) the inequality sign!",
+        keyRuleExample: "Example: 2 < 5, but multiplying by −1 gives −2 > −5.",
+        threePropsTitle: "The Core Algebraic Properties",
+        propAddTitle: "1. Addition & Subtraction",
+        propAddDesc: "Adding or subtracting the same number on both sides keeps the inequality sign UNCHANGED.",
+        propPosTitle: "2. Multiply / Divide by Positive (+)",
+        propPosDesc: "Multiplying or dividing both sides by a positive number keeps the sign UNCHANGED.",
+        propNegTitle: "3. Multiply / Divide by Negative (−)",
+        propNegDesc: "Multiplying or dividing both sides by a negative number REVERSES the sign!",
+        nlNotationTitle: "Number Line Notation Guide",
+        strictIneq: "Strict Inequalities (< and >)",
+        strictDesc: "Use an OPEN circle ○. The boundary point is NOT included in the graphical solution.",
+        nonStrictIneq: "Non-strict Inequalities (≤ and ≥)",
+        nonStrictDesc: "Use a SOLID (filled) circle ●. The boundary point IS included in the graphical solution.",
+        symLt: "Less than (Open circle ○)",
+        symGt: "Greater than (Open circle ○)",
+        symLe: "Less than or equal to (Solid circle ●)",
+        symGe: "Greater than or equal to (Solid circle ●)",
+        unlocked: "Unlocked",
+        locked: "Locked (Complete previous level)",
+        correctMsg: "🎉 Correct! Excellent job.",
+        incorrectMsg: "Not quite right yet. Review the hint or diagnostic diagnosis below."
+      },
+      zh: {
+        reset: "重置進度",
+        tabLearn: "學習",
+        tabPractice: "練習",
+        tabProperties: "不等式性質",
+        learnTitle: "循序漸進解題示範",
+        learnSub: "選擇關卡以逐步查看詳細解答與原理說明。",
+        backToMenu: "← 返回關卡選單",
+        nextStep: "下一步 →",
+        prevStep: "上一步 ←",
+        restart: "重新開始",
+        checkUnderstanding: "概念測驗",
+        practiceTitle: "分級練習題庫",
+        practiceSub: "解答題目以累積星星，解鎖更高難度的關卡。",
+        levelProgress: "本關進度：",
+        overallProgress: "總課程進度：",
+        selectFinalAns: "1. 選擇正確的解：",
+        selectNL: "2. 哪一條數線正確表示該不等式的圖解？",
+        checkAnswer: "核對答案",
+        hint: "提示 💡",
+        showSolution: "顯示完整解答",
+        nextQuestion: "下一題 →",
+        fullWorkedSol: "完整詳細步驟解答",
+        propTitle: "一元一次不等式性質參考卡",
+        keyRuleTitle: "⚠️ 不等式的黃金法則",
+        keyRuleDesc: "當你在不等式兩邊同時「乘或除以負數」時，必須「顛倒（變號）」不等號的方向！",
+        keyRuleExample: "例子：2 < 5，但同乘以 −1 後會變成 −2 > −5。",
+        threePropsTitle: "三大代數性質",
+        propAddTitle: "1. 加法與減法性質",
+        propAddDesc: "兩邊同時加或減相同的數，不等號方向「保持不變」。",
+        propPosTitle: "2. 乘以／除以正數 (+)",
+        propPosDesc: "兩邊同時乘或除以相同的正數，不等號方向「保持不變」。",
+        propNegTitle: "3. 乘以／除以負數 (−)",
+        propNegDesc: "兩邊同時乘或除以相同的負數，不等號方向「必須顛倒」！",
+        nlNotationTitle: "數線表示法指南",
+        strictIneq: "嚴格不等式 (< 與 >)",
+        strictDesc: "使用「空心圓圈 ○」，表示邊界值「不包含」在圖解內。",
+        nonStrictIneq: "非嚴格不等式 (≤ 與 ≥)",
+        nonStrictDesc: "使用「實心圓圈 ●」，表示邊界值「包含」在圖解內。",
+        symLt: "小於 (空心圓圈 ○)",
+        symGt: "大於 (空心圓圈 ○)",
+        symLe: "小於或等於 (實心圓圈 ●)",
+        symGe: "大於或等於 (實心圓圈 ●)",
+        unlocked: "已解鎖",
+        locked: "未解鎖 (請先完成前一關)",
+        correctMsg: "🎉 答對了！做得好。",
+        incorrectMsg: "尚未完全正確，請參考下方提示或診斷說明。"
+      }
+    };
+
+    let currentLang = "en";
+
+    const LEVELS = [
+      { id: 1, titleEn: "Level 1: Addition & Subtraction", titleZh: "第一關：一步計算 (加減法)", descEn: "x + a < b, x − a ≥ b. Sign remains UNCHANGED.", descZh: "x + a < b, x − a ≥ b。不等號方向不變。" },
+      { id: 2, titleEn: "Level 2: Multiply/Divide Positive", titleZh: "第二關：一步計算 (乘除正數)", descEn: "ax ≤ b, x/a > b (a > 0). Sign UNCHANGED.", descZh: "ax ≤ b, x/a > b (a > 0)。不等號方向不變。" },
+      { id: 3, titleEn: "Level 3: Multiply/Divide Negative", titleZh: "第三關：一步計算 (乘除負數 - 關鍵關卡)", descEn: "−ax > b, x/(−a) ≤ b. Sign REVERSES!", descZh: "−ax > b, x/(−a) ≤ b。不等號必須顛倒！" },
+      { id: 4, titleEn: "Level 4: Two-Step Inequalities", titleZh: "第四關：兩步計算", descEn: "ax + b < c, c − ax > d.", descZh: "ax + b < c, c − ax > d。" },
+      { id: 5, titleEn: "Level 5: Variables on Both Sides", titleZh: "第五關：兩邊皆有未知數", descEn: "ax + b ≥ cx + d.", descZh: "ax + b ≥ cx + d。" },
+      { id: 6, titleEn: "Level 6: Brackets & Fractions", titleZh: "第六關：括號與分數", descEn: "(ax + b)/c < d, a(x + b) ≥ c.", descZh: "(ax + b)/c < d, a(x + b) ≥ c。" }
+    ];
+
+    let appState = {
+      student: { name: "", class: "", num: "" },
+      unlockedLevel: 1,
+      completedLearnExamples: {},
+      levelProgress: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
+    };
+
+    function gcd(x, y) {
+      x = Math.abs(x); y = Math.abs(y);
+      while(y) { let t = y; y = x % y; x = t; }
+      return x;
+    }
+
+    function loadSavedProgress() {
+      const saved = localStorage.getItem("ineq_explorer_progress_v2");
+      if (saved) {
+        try { appState = JSON.parse(saved); } catch(e) {}
+      }
+      const modal = document.getElementById('studentModal');
+      if (appState.student && appState.student.name) {
+        updateStudentHeader();
+        modal.classList.add('hidden');
+      } else {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function saveProgress() {
+      localStorage.setItem("ineq_explorer_progress_v2", JSON.stringify(appState));
+      updateGlobalProgress();
+    }
+
+    function saveStudentProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('studentName').value.trim();
+      const cls = document.getElementById('studentClass').value.trim();
+      const num = document.getElementById('studentClassNum').value.trim();
+
+      if (name && cls && num) {
+        appState.student = { name, class: cls, num };
+        saveProgress();
+        updateStudentHeader();
+        
+        const modal = document.getElementById('studentModal');
+        modal.classList.add('hidden');
+      }
+    }
+
+    function updateStudentHeader() {
+      const st = appState.student;
+      if (st && st.name) {
+        document.getElementById('headerStudentBadge').textContent = `👤 ${st.name} (${st.class} #${st.num})`;
+      }
+    }
+
+    function updateGlobalProgress() {
+      const totalLearn = 7;
+      const totalPractice = 18;
+      
+      let doneLearn = Object.keys(appState.completedLearnExamples || {}).length;
+      let donePractice = 0;
+      Object.values(appState.levelProgress || {}).forEach(v => donePractice += Math.min(3, v));
+
+      let pct = Math.round(((doneLearn + donePractice) / (totalLearn + totalPractice)) * 100);
+      pct = Math.min(100, pct);
+
+      document.getElementById('globalProgressFill').style.width = `${pct}%`;
+      document.getElementById('globalProgressText').textContent = `${pct}%`;
+
+      const certBtn = document.getElementById('certDownloadBtn');
+      if (pct >= 80) {
+        certBtn.style.display = 'inline-flex';
+      } else {
+        certBtn.style.display = 'none';
+      }
+    }
+
+    function resetProgress() {
+      if (confirm(currentLang === 'en' ? "Reset all progress and student info?" : "確定要重置所有學習進度與學生資料嗎？")) {
+        appState = { student: { name: "", class: "", num: "" }, unlockedLevel: 1, completedLearnExamples: {}, levelProgress: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 } };
+        saveProgress();
+        renderLevelGrids();
+        
+        const modal = document.getElementById('studentModal');
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function flipSymbol(sym) {
+      if (sym === '<') return '>';
+      if (sym === '>') return '<';
+      if (sym === '≤') return '≥';
+      if (sym === '≥') return '≤';
+      return sym;
+    }
+
+    function getSolutionCaption(val, sym) {
+      const isZh = currentLang === 'zh';
+      let symText = '';
+      if (sym === '<') symText = isZh ? `小於 ${val} (不包含 ${val})` : `less than ${val} (${val} not included)`;
+      else if (sym === '>') symText = isZh ? `大於 ${val} (不包含 ${val})` : `greater than ${val} (${val} not included)`;
+      else if (sym === '≤') symText = isZh ? `小於或等於 ${val} (包含 ${val})` : `less than or equal to ${val} (${val} included)`;
+      else if (sym === '≥') symText = isZh ? `大於或等於 ${val} (包含 ${val})` : `greater than or equal to ${val} (${val} included)`;
+      return isZh ? `圖解：所有${symText}的數` : `Graphical solution: All numbers ${symText}`;
+    }
+
+    /* SVG NUMBER LINE RENDERER */
+    function drawSVGNumberLine(svgId, boundaryVal, symbol) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+
+      svg.innerHTML = '';
+      const width = 600;
+      const height = 85;
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+      let min = Math.min(-5, Math.floor(boundaryVal) - 3);
+      let max = Math.max(5, Math.ceil(boundaryVal) + 3);
+      if (max - min < 10) { min = boundaryVal - 5; max = boundaryVal + 5; }
+
+      const padding = 40;
+      const lineY = 45;
+      const axisWidth = width - 2 * padding;
+
+      function getX(val) { return padding + ((val - min) / (max - min)) * axisWidth; }
+
+      const axis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      axis.setAttribute("x1", padding - 15); axis.setAttribute("y1", lineY);
+      axis.setAttribute("x2", width - padding + 15); axis.setAttribute("y2", lineY);
+      axis.setAttribute("stroke", "#475569"); axis.setAttribute("stroke-width", "3");
+      svg.appendChild(axis);
+
+      const leftArrow = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      leftArrow.setAttribute("points", `${padding - 10},${lineY - 5} ${padding - 18},${lineY} ${padding - 10},${lineY + 5}`);
+      leftArrow.setAttribute("fill", "none"); leftArrow.setAttribute("stroke", "#475569"); leftArrow.setAttribute("stroke-width", "3");
+      svg.appendChild(leftArrow);
+
+      const rightArrow = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      rightArrow.setAttribute("points", `${width - padding + 10},${lineY - 5} ${width - padding + 18},${lineY} ${width - padding + 10},${lineY + 5}`);
+      rightArrow.setAttribute("fill", "none"); rightArrow.setAttribute("stroke", "#475569"); rightArrow.setAttribute("stroke-width", "3");
+      svg.appendChild(rightArrow);
+
+      const step = (max - min) > 16 ? 2 : 1;
+      for (let v = Math.ceil(min); v <= Math.floor(max); v += step) {
+        const tx = getX(v);
+        const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        tick.setAttribute("x1", tx); tick.setAttribute("y1", lineY - 6);
+        tick.setAttribute("x2", tx); tick.setAttribute("y2", lineY + 6);
+        tick.setAttribute("stroke", "#64748b"); tick.setAttribute("stroke-width", "2");
+        svg.appendChild(tick);
+
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", tx); label.setAttribute("y", lineY + 24);
+        label.setAttribute("text-anchor", "middle"); label.setAttribute("font-size", "13");
+        label.setAttribute("fill", v === boundaryVal ? "#2563eb" : "#64748b");
+        if (v === boundaryVal) label.setAttribute("font-weight", "bold");
+        label.textContent = v;
+        svg.appendChild(label);
+      }
+
+      const bx = getX(boundaryVal);
+      const isRight = (symbol === '>' || symbol === '≥');
+      const isSolid = (symbol === '≤' || symbol === '≥');
+      const targetX = isRight ? (width - padding + 12) : (padding - 12);
+
+      const ray = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      ray.setAttribute("x1", bx); ray.setAttribute("y1", lineY - 14);
+      ray.setAttribute("x2", targetX); ray.setAttribute("y2", lineY - 14);
+      ray.setAttribute("stroke", "#2563eb"); ray.setAttribute("stroke-width", "5");
+      svg.appendChild(ray);
+
+      const conn = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      conn.setAttribute("x1", bx); conn.setAttribute("y1", lineY);
+      conn.setAttribute("x2", bx); conn.setAttribute("y2", lineY - 14);
+      conn.setAttribute("stroke", "#2563eb"); conn.setAttribute("stroke-width", "3");
+      conn.setAttribute("stroke-dasharray", "3,3");
+      svg.appendChild(conn);
+
+      const rayArrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      const ahSize = 8;
+      if (isRight) {
+        rayArrow.setAttribute("points", `${targetX},${lineY - 14} ${targetX - ahSize},${lineY - 14 - ahSize + 2} ${targetX - ahSize},${lineY - 14 + ahSize - 2}`);
+      } else {
+        rayArrow.setAttribute("points", `${targetX},${lineY - 14} ${targetX + ahSize},${lineY - 14 - ahSize + 2} ${targetX + ahSize},${lineY - 14 + ahSize - 2}`);
+      }
+      rayArrow.setAttribute("fill", "#2563eb");
+      svg.appendChild(rayArrow);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", bx); circle.setAttribute("cy", lineY - 14);
+      circle.setAttribute("r", "7"); circle.setAttribute("stroke", "#2563eb");
+      circle.setAttribute("stroke-width", "3"); circle.setAttribute("fill", isSolid ? "#2563eb" : "#ffffff");
+      svg.appendChild(circle);
+    }
+
+    /* LEARN DATA */
+    const LEARN_EXAMPLES = {
+      1: [
+        {
+          orig: "x + 5 < 9",
+          steps: [
+            { opEn: "Subtract 5 from both sides", opZh: "兩邊同時減去 5", propEn: "Subtraction Property", propZh: "減法性質", res: "x < 4", whyEn: "Subtracting the same amount keeps the inequality balanced, so the sign stays <.", whyZh: "兩邊減去相同數值能維持平衡，不等號方向保持不變 (<)。", isWarning: false }
+          ],
+          boundary: 4, symbol: "<",
+          mcQEn: "Why did the inequality sign remain '<' after subtracting 5?",
+          mcQZh: "為什麼減去 5 後，不等號方向保持 '<' 不變？",
+          mcOptsEn: [
+            { text: "Subtracting a number on both sides never changes the sign", correct: true },
+            { text: "Because 9 is larger than 5", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "兩邊同時減去一個數，不等號方向永遠不變", correct: true },
+            { text: "因為 9 大於 5", correct: false }
+          ]
+        },
+        {
+          orig: "x − 3 ≥ 7",
+          steps: [
+            { opEn: "Add 3 to both sides", opZh: "兩邊同時加上 3", propEn: "Addition Property", propZh: "加法性質", res: "x ≥ 10", whyEn: "Adding 3 undoes the −3 without altering the inequality sign direction.", whyZh: "加上 3 可抵消 −3，不等號方向保持不變 (≥)。", isWarning: false }
+          ],
+          boundary: 10, symbol: "≥",
+          mcQEn: "What type of circle is drawn on 10 on the number line?",
+          mcQZh: "在數線上標示 10 時，應使用哪種圓圈？",
+          mcOptsEn: [
+            { text: "Solid circle (●) because of ≥", correct: true },
+            { text: "Open circle (○) because of ≥", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "實心圓圈 (●)，因為符號是 ≥", correct: true },
+            { text: "空心圓圈 (○)，因為符號是 ≥", correct: false }
+          ]
+        }
+      ],
+      2: [
+        {
+          orig: "3x ≤ 12",
+          steps: [
+            { opEn: "Divide both sides by positive 3", opZh: "兩邊同時除以正數 3", propEn: "Division Property (Positive)", propZh: "除法性質 (正數)", res: "x ≤ 4", whyEn: "Dividing by a positive number keeps the inequality sign unchanged.", whyZh: "除以正數時，不等號方向保持不變 (≤)。", isWarning: false }
+          ],
+          boundary: 4, symbol: "≤",
+          mcQEn: "Does dividing by positive 3 flip the inequality sign?",
+          mcQZh: "除以正數 3 會導致不等號顛倒嗎？",
+          mcOptsEn: [
+            { text: "No, dividing by a positive number leaves the sign unchanged", correct: true },
+            { text: "Yes, division always flips the sign", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "不會，除以正數時不等號方向保持不變", correct: true },
+            { text: "會，所有除法運算都會使不等號變號", correct: false }
+          ]
+        }
+      ],
+      3: [
+        {
+          orig: "−2x > 6",
+          steps: [
+            { opEn: "Divide both sides by negative −2", opZh: "兩邊同時除以負數 −2", propEn: "Division Property (Negative)", propZh: "除法性質 (負數)", res: "x < −3", whyEn: "⚠️ KEY MISCONCEPTION: Dividing by a negative number REVERSES the inequality sign from > to <!", whyZh: "⚠️ 關鍵概念：兩邊同時除以負數時，不等號必須從 > 顛倒為 <！", isWarning: true }
+          ],
+          boundary: -3, symbol: "<",
+          mcQEn: "When dividing −2x > 6 by −2, what happens to the sign?",
+          mcQZh: "當將 −2x > 6 兩邊同時除以 −2 時，不等號會發生什麼變化？",
+          mcOptsEn: [
+            { text: "It flips from > to < because we divided by a negative number", correct: true },
+            { text: "It stays as >", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "由 > 顛倒為 <，因為我們除以了一個負數", correct: true },
+            { text: "保持 > 不變", correct: false }
+          ]
+        }
+      ],
+      4: [
+        {
+          orig: "3 − 2x > 9",
+          steps: [
+            { opEn: "Subtract 3 from both sides", opZh: "兩邊同時減去 3", propEn: "Subtraction Property", propZh: "減法性質", res: "−2x > 6", whyEn: "Isolate the term containing x. Sign stays >.", whyZh: "先將包含 x 的項隔離，不等號保持 >。", isWarning: false },
+            { opEn: "Divide both sides by −2", opZh: "兩邊同時除以 −2", propEn: "Division Property (Negative)", propZh: "除法性質 (負數)", res: "x < −3", whyEn: "Dividing by negative −2 flips > to <!", whyZh: "除以負數 −2，不等號由 > 顛倒為 <！", isWarning: true }
+          ],
+          boundary: -3, symbol: "<",
+          mcQEn: "Which step caused the sign reversal in this problem?",
+          mcQZh: "在本題中，哪一步驟導致了不等號方向顛倒？",
+          mcOptsEn: [
+            { text: "Step 2: Dividing by −2", correct: true },
+            { text: "Step 1: Subtracting 3", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "第二步：兩邊除以 −2", correct: true },
+            { text: "第一步：兩邊減去 3", correct: false }
+          ]
+        }
+      ],
+      5: [
+        {
+          orig: "5x − 4 ≥ 2x + 8",
+          steps: [
+            { opEn: "Subtract 2x from both sides", opZh: "兩邊同時減去 2x", propEn: "Subtraction Property", propZh: "減法性質", res: "3x − 4 ≥ 8", whyEn: "Collect all x terms on the left side.", whyZh: "將所有含 x 的項移至左邊。", isWarning: false },
+            { opEn: "Add 4 to both sides", opZh: "兩邊同時加上 4", propEn: "Addition Property", propZh: "加法性質", res: "3x ≥ 12", whyEn: "Collect constant terms on the right side.", whyZh: "將常數項移至右邊。", isWarning: false },
+            { opEn: "Divide both sides by positive 3", opZh: "兩邊同時除以正數 3", propEn: "Division Property (Positive)", propZh: "除法性質 (正數)", res: "x ≥ 4", whyEn: "Dividing by positive 3 leaves sign ≥ unchanged.", whyZh: "除以正數 3，不等號 ≥ 保持不變。", isWarning: false }
+          ],
+          boundary: 4, symbol: "≥",
+          mcQEn: "When moving 2x across the inequality, what operation was applied?",
+          mcQZh: "當將 2x 移到不等式另一邊時，使用了什麼運算？",
+          mcOptsEn: [
+            { text: "Subtract 2x from both sides", correct: true },
+            { text: "Divide both sides by 2x", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "兩邊同時減去 2x", correct: true },
+            { text: "兩邊同時除以 2x", correct: false }
+          ]
+        }
+      ],
+      6: [
+        {
+          orig: "3(x − 2) < 2x + 5",
+          steps: [
+            { opEn: "Expand brackets: 3(x − 2) = 3x − 6", opZh: "展開括號：3(x − 2) = 3x − 6", propEn: "Distributive Law", propZh: "分配律", res: "3x − 6 < 2x + 5", whyEn: "Remove brackets first before collecting terms.", whyZh: "在移項前先展開括號。", isWarning: false },
+            { opEn: "Subtract 2x from both sides", opZh: "兩邊同時減去 2x", propEn: "Subtraction Property", propZh: "減法性質", res: "x − 6 < 5", whyEn: "Move variable terms to the left.", whyZh: "將未知數項移至左邊。", isWarning: false },
+            { opEn: "Add 6 to both sides", opZh: "兩邊同時加上 6", propEn: "Addition Property", propZh: "加法性質", res: "x < 11", whyEn: "Add 6 to isolate x. Graphical solution obtained.", whyZh: "兩邊加 6 即可求得圖解。", isWarning: false }
+          ],
+          boundary: 11, symbol: "<",
+          mcQEn: "What is the first step when solving an inequality with brackets?",
+          mcQZh: "解含有括號的不等式時，第一步通常是什麼？",
+          mcOptsEn: [
+            { text: "Expand the brackets using the distributive law", correct: true },
+            { text: "Divide by x immediately", correct: false }
+          ],
+          mcOptsZh: [
+            { text: "利用分配律展開括號", correct: true },
+            { text: "獨立兩邊除以 x", correct: false }
+          ]
+        }
+      ]
+    };
+
+    let activeLearnState = { level: 1, exampleIdx: 0, currentStep: 0 };
+
+    function renderLevelGrids() {
+      const isZh = currentLang === 'zh';
+
+      const learnGrid = document.getElementById('learn-level-grid');
+      learnGrid.innerHTML = '';
+      LEVELS.forEach(lvl => {
+        const card = document.createElement('div');
+        card.className = 'level-card';
+        card.onclick = () => startLearnExample(lvl.id, 0);
+        card.innerHTML = `
+          <h3>${isZh ? lvl.titleZh : lvl.titleEn}</h3>
+          <p>${isZh ? lvl.descZh : lvl.descEn}</p>
+          <span class="level-badge">${(LEARN_EXAMPLES[lvl.id] || []).length} ${isZh ? '個示範題' : 'Worked Examples'}</span>
+        `;
+        learnGrid.appendChild(card);
+      });
+
+      const pracGrid = document.getElementById('practice-level-grid');
+      pracGrid.innerHTML = '';
+      LEVELS.forEach(lvl => {
+        const isUnlocked = lvl.id <= appState.unlockedLevel;
+        const prog = appState.levelProgress[lvl.id] || 0;
+        const card = document.createElement('div');
+        card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
+        if (isUnlocked) card.onclick = () => startPracticeLevel(lvl.id);
+        card.innerHTML = `
+          <h3>${isZh ? lvl.titleZh : lvl.titleEn}</h3>
+          <p>${isZh ? lvl.descZh : lvl.descEn}</p>
+          <span class="level-badge" style="${isUnlocked ? '' : 'background:#fee2e2; color:#991b1b;'}">
+            ${isUnlocked ? `⭐ ${prog}/3 ${isI18n('unlocked')}` : `🔒 ${isI18n('locked')}`}
+          </span>
+        `;
+        pracGrid.appendChild(card);
+      });
+    }
+
+    function showLearnMenu() {
+      document.getElementById('learn-menu').style.display = 'block';
+      document.getElementById('learn-detail').style.display = 'none';
+      renderLevelGrids();
+    }
+
+    function startLearnExample(level, exampleIdx) {
+      activeLearnState = { level, exampleIdx, currentStep: 0 };
+      document.getElementById('learn-menu').style.display = 'none';
+      document.getElementById('learn-detail').style.display = 'block';
+
+      const exList = LEARN_EXAMPLES[level] || LEARN_EXAMPLES[1];
+      const ex = exList[exampleIdx] || exList[0];
+
+      const lvlObj = LEVELS.find(l => l.id === level);
+      document.getElementById('learn-level-title').textContent = currentLang === 'zh' ? lvlObj.titleZh : lvlObj.titleEn;
+      document.getElementById('learn-example-counter').textContent = `Example ${exampleIdx + 1} of ${exList.length}`;
+
+      document.getElementById('learn-math-orig').textContent = ex.orig;
+      document.getElementById('learn-steps-container').innerHTML = '';
+      document.getElementById('learn-nl-box').style.display = 'none';
+      document.getElementById('learn-mc-box').style.display = 'none';
+
+      updateLearnControls();
+    }
+
+    function nextLearnExample() {
+      const exList = LEARN_EXAMPLES[activeLearnState.level] || LEARN_EXAMPLES[1];
+      if (activeLearnState.exampleIdx < exList.length - 1) {
+        startLearnExample(activeLearnState.level, activeLearnState.exampleIdx + 1);
+      }
+    }
+
+    function prevLearnExample() {
+      if (activeLearnState.exampleIdx > 0) {
+        startLearnExample(activeLearnState.level, activeLearnState.exampleIdx - 1);
+      }
+    }
+
+    function nextLearnStep() {
+      const ex = (LEARN_EXAMPLES[activeLearnState.level] || LEARN_EXAMPLES[1])[activeLearnState.exampleIdx];
+      if (activeLearnState.currentStep < ex.steps.length) {
+        const step = ex.steps[activeLearnState.currentStep];
+        const isZh = currentLang === 'zh';
+
+        const container = document.getElementById('learn-steps-container');
+        const card = document.createElement('div');
+        card.className = `step-card ${step.isWarning ? 'warning-step' : ''}`;
+        card.innerHTML = `
+          <div class="step-header">
+            <span class="step-op">${isZh ? step.opZh : step.opEn}</span>
+            <span class="step-prop">${isZh ? step.propZh : step.propEn}</span>
+          </div>
+          <div class="step-result">${step.res}</div>
+          <div class="step-why">${isZh ? step.whyZh : step.whyEn}</div>
+        `;
+        container.appendChild(card);
+
+        activeLearnState.currentStep++;
+
+        if (activeLearnState.currentStep === ex.steps.length) {
+          document.getElementById('learn-nl-box').style.display = 'block';
+          drawSVGNumberLine('learn-nl-svg', ex.boundary, ex.symbol);
+          document.getElementById('learn-nl-caption').textContent = getSolutionCaption(ex.boundary, ex.symbol);
+
+          setupLearnMC(ex);
+        }
+      }
+      updateLearnControls();
+    }
+
+    function prevLearnStep() {
+      if (activeLearnState.currentStep > 0) {
+        activeLearnState.currentStep--;
+        const container = document.getElementById('learn-steps-container');
+        if (container.lastChild) container.removeChild(container.lastChild);
+
+        document.getElementById('learn-nl-box').style.display = 'none';
+        document.getElementById('learn-mc-box').style.display = 'none';
+      }
+      updateLearnControls();
+    }
+
+    function restartLearn() {
+      startLearnExample(activeLearnState.level, activeLearnState.exampleIdx);
+    }
+
+    function updateLearnControls() {
+      const exList = LEARN_EXAMPLES[activeLearnState.level] || LEARN_EXAMPLES[1];
+      const ex = exList[activeLearnState.exampleIdx];
+      
+      const nextBtn = document.getElementById('learn-next-btn');
+      const prevBtn = document.getElementById('learn-prev-btn');
+
+      prevBtn.disabled = (activeLearnState.currentStep === 0);
+      if (activeLearnState.currentStep >= ex.steps.length) {
+        nextBtn.style.display = 'none';
+      } else {
+        nextBtn.style.display = 'inline-flex';
+      }
+
+      const prevExBtn = document.getElementById('learn-ex-prev-btn');
+      const nextExBtn = document.getElementById('learn-ex-next-btn');
+
+      // Hide Next Example button if level has only 1 example or reached the last example
+      if (exList.length <= 1) {
+        prevExBtn.style.display = 'none';
+        nextExBtn.style.display = 'none';
+      } else {
+        prevExBtn.style.display = (activeLearnState.exampleIdx > 0) ? 'inline-flex' : 'none';
+        nextExBtn.style.display = (activeLearnState.exampleIdx < exList.length - 1) ? 'inline-flex' : 'none';
+      }
+    }
+
+    function setupLearnMC(ex) {
+      const mcBox = document.getElementById('learn-mc-box');
+      const qText = document.getElementById('learn-mc-question');
+      const optsDiv = document.getElementById('learn-mc-options');
+      const fb = document.getElementById('learn-mc-feedback');
+
+      mcBox.style.display = 'block';
+      fb.style.display = 'none';
+      qText.textContent = currentLang === 'zh' ? ex.mcQZh : ex.mcQEn;
+      optsDiv.innerHTML = '';
+
+      const opts = currentLang === 'zh' ? ex.mcOptsZh : ex.mcOptsEn;
+      opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline';
+        btn.style.justifyContent = 'flex-start';
+        btn.style.textAlign = 'left';
+        btn.textContent = `${String.fromCharCode(65 + idx)}. ${opt.text}`;
+        btn.onclick = () => {
+          fb.style.display = 'block';
+          if (opt.correct) {
+            fb.className = 'feedback-box correct';
+            fb.textContent = currentLang === 'zh' ? '✅ 正確！你已經掌握了這個核心概念。' : '✅ Correct! You have grasped this core mathematical concept.';
+            
+            const exKey = `${activeLearnState.level}_${activeLearnState.exampleIdx}`;
+            if (!appState.completedLearnExamples) appState.completedLearnExamples = {};
+            appState.completedLearnExamples[exKey] = true;
+            saveProgress();
+          } else {
+            fb.className = 'feedback-box incorrect';
+            fb.textContent = currentLang === 'zh' ? '❌ 不太對，請重新思考步驟中的變號法則與數線規則。' : '❌ Not quite. Think carefully about sign rules and number line notation.';
+          }
+        };
+        optsDiv.appendChild(btn);
+      });
+    }
+
+    /* PRACTICE LOGIC */
+    let activePracticeState = {
+      level: 1, currentQuestion: null, selectedSolIdx: null, selectedNLIdx: null, hintStage: 0
+    };
+
+    function generateQuestion(level) {
+      const symbols = ['<', '>', '≤', '≥'];
+      const randSym = () => symbols[Math.floor(Math.random() * symbols.length)];
+      const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const randNonZero = (min, max) => { let v = 0; while(v === 0) v = randInt(min, max); return v; };
+
+      let origStr = ""; let boundary = 0; let finalSym = "<"; let steps = []; let hintsEn = []; let hintsZh = [];
+
+      if (level === 1) {
+        const isAdd = Math.random() > 0.5;
+        const a = randInt(1, 9); const b = randInt(-5, 12); const sym = randSym(); finalSym = sym;
+        if (isAdd) {
+          origStr = `x + ${a} ${sym} ${b}`; boundary = b - a;
+          steps.push({ opEn: `Subtract ${a} from both sides`, opZh: `兩邊同時減去 ${a}`, propEn: "Subtraction Property", propZh: "減法性質", res: `x ${finalSym} ${boundary}`, whyEn: `Subtracting ${a} keeps sign unchanged.`, whyZh: `同時減去 ${a}，不等號方向保持不變。`, isWarning: false });
+          hintsEn = [`Undo addition by subtracting ${a}.`, "Addition/Subtraction never flips the sign.", `Calculate ${b} − ${a}.`];
+          hintsZh = [`透過兩邊同時減去 ${a} 來消除加法。`, "加減法運算絕不會改變不等號方向。", `計算 ${b} − ${a}。`];
+        } else {
+          origStr = `x − ${a} ${sym} ${b}`; boundary = b + a;
+          steps.push({ opEn: `Add ${a} to both sides`, opZh: `兩邊同時加上 ${a}`, propEn: "Addition Property", propZh: "加法性質", res: `x ${finalSym} ${boundary}`, whyEn: `Adding ${a} keeps sign unchanged.`, whyZh: `同時加上 ${a}，不等號方向保持不變。`, isWarning: false });
+          hintsEn = [`Undo subtraction by adding ${a}.`, "Addition/Subtraction never flips the sign.", `Calculate ${b} + ${a}.`];
+          hintsZh = [`透過兩邊同時加上 ${a} 來消除減法。`, "加減法運算絕不會改變不等號方向。", `計算 ${b} + ${a}。`];
+        }
+      } else if (level === 2) {
+        const a = randInt(2, 6); const boundaryVal = randInt(-4, 6); const b = a * boundaryVal; const sym = randSym();
+        finalSym = sym; boundary = boundaryVal; origStr = `${a}x ${sym} ${b}`;
+        steps.push({ opEn: `Divide both sides by positive ${a}`, opZh: `兩邊同時除以正數 ${a}`, propEn: "Division Property (Positive)", propZh: "除法性質 (正數)", res: `x ${finalSym} ${boundary}`, whyEn: `Dividing by a positive number leaves the sign unchanged.`, whyZh: `除以正數時，不等號方向保持不變。`, isWarning: false });
+        hintsEn = [`Divide both sides by ${a}.`, `Since ${a} is positive, the sign stays the same.`, `Divide ${b} by ${a}.`];
+        hintsZh = [`兩邊同時除以 ${a}。`, `由於 ${a} 是正數，不等號方向保持不變。`, `將 ${b} 除以 ${a}。`];
+      } else if (level === 3) {
+        const aPos = randInt(2, 5); const a = -aPos; const boundaryVal = randInt(-5, 5); const b = a * boundaryVal; const sym = randSym();
+        finalSym = flipSymbol(sym); boundary = boundaryVal; origStr = `${a}x ${sym} ${b}`;
+        steps.push({ opEn: `Divide both sides by negative ${a}`, opZh: `兩邊同時除以負數 ${a}`, propEn: "Division Property (Negative)", propZh: "除法性質 (負數)", res: `x ${finalSym} ${boundary}`, whyEn: `⚠️ KEY RULE: Dividing by negative ${a} REVERSES the sign!`, whyZh: `⚠️ 關鍵法則：除以負數 ${a} 時，不等號方向必須顛倒！`, isWarning: true });
+        hintsEn = [`Divide both sides by negative ${a}.`, `⚠️ ATTENTION: Dividing by a negative number MUST reverse the inequality sign (${sym} → ${finalSym}).`, `Calculate ${b} ÷ (${a}).`];
+        hintsZh = [`兩邊同時除以負數 ${a}。`, `⚠️ 注意：除以負數時必須將不等號方向顛倒 (${sym} → ${finalSym})。`, `計算 ${b} ÷ (${a})。`];
+      } else if (level === 4) {
+        const a = randNonZero(-4, 5); const b = randInt(-6, 8); const boundaryVal = randInt(-4, 5); const c = a * boundaryVal + b; const sym = randSym();
+        const bSign = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`; origStr = `${a}x ${bSign} ${sym} ${c}`;
+        const rem = c - b;
+        steps.push({ opEn: b >= 0 ? `Subtract ${b}` : `Add ${Math.abs(b)}`, opZh: b >= 0 ? `兩邊同時減去 ${b}` : `兩邊同時加上 ${Math.abs(b)}`, propEn: "Addition/Subtraction", propZh: "加減性質", res: `${a}x ${sym} ${rem}`, whyEn: "Isolate x term.", whyZh: "隔離未知數項。", isWarning: false });
+        if (a < 0) {
+          finalSym = flipSymbol(sym);
+          steps.push({ opEn: `Divide by negative ${a}`, opZh: `除以負數 ${a}`, propEn: "Division (Negative)", propZh: "除法 (負數)", res: `x ${finalSym} ${boundaryVal}`, whyEn: `Dividing by negative ${a} reverses the sign!`, whyZh: `除以負數 ${a}，不等號顛倒！`, isWarning: true });
+        } else {
+          finalSym = sym;
+          steps.push({ opEn: `Divide by positive ${a}`, opZh: `除以正數 ${a}`, propEn: "Division (Positive)", propZh: "除法 (正數)", res: `x ${finalSym} ${boundaryVal}`, whyEn: `Sign unchanged.`, whyZh: `不等號不變。`, isWarning: false });
+        }
+        boundary = boundaryVal;
+        hintsEn = ["Isolate the term with x.", "Divide both sides by the x coefficient.", "Check if you divided by a negative number!"];
+        hintsZh = ["先隔離含 x 的項。", "兩邊同除以 x 的係數。", "檢查除數是否為負數！"];
+      } else if (level === 5) {
+        const c = randInt(1, 4); const diff = randNonZero(-3, 3); const a = c + diff; const boundaryVal = randInt(-3, 5); const b = randInt(-5, 5); const d = b + diff * boundaryVal; const sym = randSym();
+        origStr = `${a}x ${b >= 0 ? '+' : '−'} ${Math.abs(b)} ${sym} ${c}x ${d >= 0 ? '+' : '−'} ${Math.abs(d)}`;
+        steps.push({ opEn: `Subtract ${c}x`, opZh: `減去 ${c}x`, propEn: "Subtraction Property", propZh: "減法性質", res: `${diff}x ${b >= 0 ? '+' : '−'} ${Math.abs(b)} ${sym} ${d}`, whyEn: "Collect x terms on left.", whyZh: "移項至左邊。", isWarning: false });
+        const rhs1 = d - b;
+        steps.push({ opEn: b >= 0 ? `Subtract ${b}` : `Add ${Math.abs(b)}`, opZh: b >= 0 ? `減去 ${b}` : `加上 ${Math.abs(b)}`, propEn: "Addition/Subtraction", propZh: "加減性質", res: `${diff}x ${sym} ${rhs1}`, whyEn: "Collect constants on right.", whyZh: "常數移至右邊。", isWarning: false });
+        if (diff < 0) {
+          finalSym = flipSymbol(sym);
+          steps.push({ opEn: `Divide by negative ${diff}`, opZh: `除以負數 ${diff}`, propEn: "Division (Negative)", propZh: "除法 (負數)", res: `x ${finalSym} ${boundaryVal}`, whyEn: `Dividing by negative ${diff} REVERSES sign!`, whyZh: `除以負數 ${diff}，不等號顛倒！`, isWarning: true });
+        } else {
+          finalSym = sym;
+          steps.push({ opEn: `Divide by positive ${diff}`, opZh: `除以正數 ${diff}`, propEn: "Division (Positive)", propZh: "除法 (正數)", res: `x ${finalSym} ${boundaryVal}`, whyEn: `Sign unchanged.`, whyZh: `不等號不變。`, isWarning: false });
+        }
+        boundary = boundaryVal;
+        hintsEn = ["Move variable terms to left side.", "Move constants to right side.", "Divide by coefficient."];
+        hintsZh = ["先將含未知數項移至左邊。", "將常數項移至右邊。", "最後同除以係數。"];
+      } else {
+        // LEVEL 6: Coprime constant multiple and opposite side number, yielding integer x
+        const sym = randSym();
+        const boundaryVal = randInt(-5, 5);
+        let c = randInt(2, 5);
+        let d = randNonZero(-5, 5);
+        
+        // Ensure constant multiple c and opposite side number d have NO common factor (gcd = 1)
+        while (gcd(c, d) !== 1) {
+          d = randNonZero(-5, 5);
+        }
+
+        const a = randNonZero(-3, 3);
+        const b = c * d - a * boundaryVal;
+
+        const aXStr = a === 1 ? 'x' : (a === -1 ? '−x' : `${a}x`);
+        const bStr = b === 0 ? '' : (b > 0 ? ` + ${b}` : ` − ${Math.abs(b)}`);
+
+        origStr = `(${aXStr}${bStr}) / ${c} ${sym} ${d}`;
+
+        const rhs1 = c * d;
+        steps.push({
+          opEn: `Multiply both sides by ${c} (LCM to clear fraction)`,
+          opZh: `兩邊同時乘以 ${c} (去分母)`,
+          propEn: "Multiplication Property (Positive)",
+          propZh: "乘法性質 (正數)",
+          res: `${aXStr}${bStr} ${sym} ${rhs1}`,
+          whyEn: `Multiplying by positive ${c} clears the denominator. Note that ${c} and ${d} share no common factor!`,
+          whyZh: `同時乘以正數 ${c} 可消除分母。注意常數 ${c} 與對面的 ${d} 互質（無公因數）！`,
+          isWarning: false
+        });
+
+        const rem = rhs1 - b;
+        const bOpEn = b >= 0 ? `Subtract ${b} from both sides` : `Add ${Math.abs(b)} to both sides`;
+        const bOpZh = b >= 0 ? `兩邊同時減去 ${b}` : `兩邊同時加上 ${Math.abs(b)}`;
+        steps.push({
+          opEn: bOpEn, opZh: bOpZh,
+          propEn: b >= 0 ? "Subtraction Property" : "Addition Property",
+          propZh: b >= 0 ? "減法性質" : "加法性質",
+          res: `${aXStr} ${sym} ${rem}`,
+          whyEn: "Isolate the x term on the left side.",
+          whyZh: "將含 x 的項隔離至左邊。",
+          isWarning: false
+        });
+
+        if (a < 0) {
+          finalSym = flipSymbol(sym);
+          steps.push({
+            opEn: `Divide both sides by negative ${a}`,
+            opZh: `兩邊同時除以負數 ${a}`,
+            propEn: "Division Property (Negative)",
+            propZh: "除法性質 (負數)",
+            res: `x ${finalSym} ${boundaryVal}`,
+            whyEn: `Dividing by negative ${a} REVERSES the inequality sign from ${sym} to ${finalSym}!`,
+            whyZh: `除以負數 ${a}，不等號由 ${sym} 顛倒為 ${finalSym}！`,
+            isWarning: true
+          });
+        } else if (a > 1) {
+          finalSym = sym;
+          steps.push({
+            opEn: `Divide both sides by positive ${a}`,
+            opZh: `兩邊同時除以正數 ${a}`,
+            propEn: "Division Property (Positive)",
+            propZh: "除法性質 (正數)",
+            res: `x ${finalSym} ${boundaryVal}`,
+            whyEn: `Dividing by positive ${a} leaves the sign unchanged.`,
+            whyZh: `除以正數 ${a}，不等號保持不變。`,
+            isWarning: false
+          });
+        } else {
+          finalSym = sym;
+        }
+
+        boundary = boundaryVal;
+        hintsEn = [
+          `Multiply both sides by ${c} to clear the fraction. (Note ${c} and ${d} share no common factor)`,
+          `Isolate the term with x by adding or subtracting the constant.`,
+          `Divide by the coefficient of x, flipping the sign if it is negative.`
+        ];
+        hintsZh = [
+          `第一步：兩邊同時乘以 ${c} 去分母（常數 ${c} 與對面的 ${d} 無公因數）。`,
+          `第二步：透過加減法將含 x 的項隔離。`,
+          `第三步：兩邊除以 x 的係數（若是負數記得變號）。`
+        ];
+      }
+
+      return { orig: origStr, boundary, correctSym: finalSym, steps, hintsEn, hintsZh };
+    }
+
+    function showPracticeMenu() {
+      document.getElementById('practice-menu').style.display = 'block';
+      document.getElementById('practice-detail').style.display = 'none';
+      renderLevelGrids();
+    }
+
+    function startPracticeLevel(level) {
+      activePracticeState.level = level;
+      document.getElementById('practice-menu').style.display = 'none';
+      document.getElementById('practice-detail').style.display = 'block';
+
+      const lvlObj = LEVELS.find(l => l.id === level);
+      document.getElementById('practice-level-indicator').textContent = currentLang === 'zh' ? lvlObj.titleZh : lvlObj.titleEn;
+
+      updatePracticeProgressUI();
+      loadNextPracticeQuestion();
+    }
+
+    function updatePracticeProgressUI() {
+      const prog = appState.levelProgress[activePracticeState.level] || 0;
+      document.getElementById('practice-progress-text').textContent = `${prog} / 3`;
+      document.getElementById('practice-progress-fill').style.width = `${Math.min(100, (prog/3)*100)}%`;
+    }
+
+    function loadNextPracticeQuestion() {
+      const q = generateQuestion(activePracticeState.level);
+      activePracticeState.currentQuestion = q;
+      activePracticeState.selectedSolIdx = null;
+      activePracticeState.selectedNLIdx = null;
+      activePracticeState.hintStage = 0;
+
+      document.getElementById('practice-ineq-display').textContent = q.orig;
+      document.getElementById('practice-hint-box').style.display = 'none';
+      document.getElementById('practice-feedback').style.display = 'none';
+      document.getElementById('practice-solution-container').style.display = 'none';
+
+      document.getElementById('practice-check-btn').style.display = 'inline-flex';
+      document.getElementById('practice-sol-btn').style.display = 'inline-flex';
+      document.getElementById('practice-next-btn').style.display = 'none';
+
+      renderPracticeOptions(q);
+    }
+
+    function renderPracticeOptions(q) {
+      const wrongSym = flipSymbol(q.correctSym);
+      const opt1 = `x ${q.correctSym} ${q.boundary}`;
+      const opt2 = `x ${wrongSym} ${q.boundary}`;
+      const opt3 = `x ${q.correctSym} ${q.boundary + 2}`;
+      const opt4 = `x ${wrongSym} ${q.boundary - 2}`;
+
+      const solOpts = [opt1, opt2, opt3, opt4].sort(() => Math.random() - 0.5);
+      const solDiv = document.getElementById('practice-sol-options');
+      solDiv.innerHTML = '';
+
+      solOpts.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'mc-btn';
+        btn.textContent = optText;
+        btn.onclick = () => {
+          document.querySelectorAll('#practice-sol-options .mc-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          activePracticeState.selectedSolIdx = optText;
+        };
+        solDiv.appendChild(btn);
+      });
+
+      const nlDiv = document.getElementById('practice-nl-options');
+      nlDiv.innerHTML = '';
+
+      const nlConfigs = [
+        { boundary: q.boundary, sym: q.correctSym, correct: true },
+        { boundary: q.boundary, sym: wrongSym, correct: false },
+        { boundary: q.boundary + 1, sym: q.correctSym, correct: false }
+      ].sort(() => Math.random() - 0.5);
+
+      nlConfigs.forEach((cfg, idx) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'nl-option';
+        const svgId = `prac-opt-svg-${idx}`;
+        wrapper.innerHTML = `<svg id="${svgId}" class="number-line-svg" style="height:60px;"></svg>`;
+        wrapper.onclick = () => {
+          document.querySelectorAll('.nl-option').forEach(w => w.classList.remove('selected'));
+          wrapper.classList.add('selected');
+          activePracticeState.selectedNLIdx = cfg.correct;
+        };
+        nlDiv.appendChild(wrapper);
+        setTimeout(() => drawSVGNumberLine(svgId, cfg.boundary, cfg.sym), 50);
+      });
+    }
+
+    function getPracticeHint() {
+      const q = activePracticeState.currentQuestion;
+      const hintBox = document.getElementById('practice-hint-box');
+      hintBox.style.display = 'block';
+
+      const hints = currentLang === 'zh' ? q.hintsZh : q.hintsEn;
+      const stage = activePracticeState.hintStage;
+
+      hintBox.innerHTML = `<strong>${currentLang === 'zh' ? '提示' : 'Hint'} (${stage + 1}/3):</strong> ${hints[stage]}`;
+      if (stage < hints.length - 1) activePracticeState.hintStage++;
+    }
+
+    function checkPracticeAnswer() {
+      const q = activePracticeState.currentQuestion;
+      const fb = document.getElementById('practice-feedback');
+
+      if (!activePracticeState.selectedSolIdx || activePracticeState.selectedNLIdx === null) {
+        alert(currentLang === 'zh' ? "請先選擇答案與對應的數線！" : "Please select both a solution and a number line first!");
+        return;
+      }
+
+      const isSolCorrect = (activePracticeState.selectedSolIdx === `x ${q.correctSym} ${q.boundary}`);
+      const isNLCorrect = activePracticeState.selectedNLIdx;
+
+      fb.style.display = 'block';
+
+      if (isSolCorrect && isNLCorrect) {
+        fb.className = 'feedback-box correct';
+        fb.textContent = isI18n('correctMsg');
+
+        const curLvl = activePracticeState.level;
+        appState.levelProgress[curLvl] = (appState.levelProgress[curLvl] || 0) + 1;
+
+        if (appState.levelProgress[curLvl] >= 3 && appState.unlockedLevel === curLvl && curLvl < 6) {
+          appState.unlockedLevel = curLvl + 1;
+          alert(currentLang === 'zh' ? `🎉 恭喜！你已解鎖第 ${curLvl + 1} 關！` : `🎉 Congratulations! You unlocked Level ${curLvl + 1}!`);
+        }
+        saveProgress();
+        updatePracticeProgressUI();
+
+        document.getElementById('practice-check-btn').style.display = 'none';
+        document.getElementById('practice-next-btn').style.display = 'inline-flex';
+      } else {
+        fb.className = 'feedback-box incorrect';
+        let diag = isI18n('incorrectMsg') + "\n";
+        if (!isSolCorrect) {
+          diag += currentLang === 'zh' ? "• 解答不正確。請檢查是否忘記在乘除負數時顛倒不等號。" : "• Incorrect solution. Check if you forgot to flip the inequality sign when multiplying/dividing by a negative.";
+        }
+        if (!isNLCorrect) {
+          diag += currentLang === 'zh' ? " • 數線不匹配。請確認空心/實心圓圈及箭頭方向。" : " • Number line mismatch. Check open vs solid circle and arrow direction.";
+        }
+        fb.textContent = diag;
+      }
+    }
+
+    function revealPracticeSolution() {
+      const q = activePracticeState.currentQuestion;
+      const container = document.getElementById('practice-solution-container');
+      const stepsDiv = document.getElementById('practice-solution-steps');
+      const isZh = currentLang === 'zh';
+
+      container.style.display = 'block';
+      stepsDiv.innerHTML = '';
+
+      q.steps.forEach(st => {
+        const card = document.createElement('div');
+        card.className = `step-card ${st.isWarning ? 'warning-step' : ''}`;
+        card.innerHTML = `
+          <div class="step-header">
+            <span class="step-op">${isZh ? st.opZh : st.opEn}</span>
+            <span class="step-prop">${isZh ? st.propZh : st.propEn}</span>
+          </div>
+          <div class="step-result">${st.res}</div>
+          <div class="step-why">${isZh ? st.whyZh : st.whyEn}</div>
+        `;
+        stepsDiv.appendChild(card);
+      });
+
+      drawSVGNumberLine('practice-sol-nl-svg', q.boundary, q.correctSym);
+    }
+
+    function nextPracticeQuestion() { loadNextPracticeQuestion(); }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+
+      if (tabName === 'learn') showLearnMenu();
+      if (tabName === 'practice') showPracticeMenu();
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'zh' : 'en';
+      document.getElementById('langToggleBtn').textContent = currentLang === 'en' ? '繁體中文' : 'English';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[currentLang][key]) {
+          el.innerHTML = I18N[currentLang][key];
+        }
+      });
+
+      renderLevelGrids();
+    }
+
+    function isI18n(key) { return I18N[currentLang][key] || key; }
+
+    /* CERTIFICATE GENERATOR */
+    function downloadCertificate() {
+      const st = appState.student;
+      if (!st || !st.name) return;
+
+      const canvas = document.getElementById('certCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.lineWidth = 12; ctx.strokeStyle = "#2563eb"; ctx.strokeRect(30, 30, w - 60, h - 60);
+      ctx.lineWidth = 4; ctx.strokeStyle = "#93c5fd"; ctx.strokeRect(45, 45, w - 90, h - 90);
+
+      ctx.fillStyle = "#1e293b"; ctx.font = "bold 38px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("PPVIC Junior Mathematics Self-paced Learning", w / 2, 120);
+
+      ctx.fillStyle = "#2563eb"; ctx.font = "bold 26px sans-serif";
+      ctx.fillText("CERTIFICATE OF ACHIEVEMENT", w / 2, 165);
+
+      ctx.beginPath(); ctx.moveTo(w / 2 - 150, 195); ctx.lineTo(w / 2 + 150, 195);
+      ctx.lineWidth = 3; ctx.strokeStyle = "#2563eb"; ctx.stroke();
+
+      ctx.fillStyle = "#64748b"; ctx.font = "22px sans-serif";
+      ctx.fillText("This is to proudly certify that", w / 2, 255);
+
+      ctx.fillStyle = "#1e3a8a"; ctx.font = "bold 50px serif";
+      ctx.fillText(st.name, w / 2, 325);
+
+      ctx.fillStyle = "#334155"; ctx.font = "bold 26px sans-serif";
+      ctx.fillText(`Class: ${st.class}  |  Class Number: #${st.num}`, w / 2, 380);
+
+      ctx.fillStyle = "#475569"; ctx.font = "22px sans-serif";
+      ctx.fillText("has successfully completed the online interactive module on", w / 2, 455);
+
+      ctx.fillStyle = "#2563eb"; ctx.font = "bold 34px sans-serif";
+      ctx.fillText("Linear Inequalities in One Unknown", w / 2, 510);
+
+      ctx.fillStyle = "#475569"; ctx.font = "20px sans-serif";
+      ctx.fillText("Demonstrating mastery of algebraic properties, step-by-step solving, and graphical solutions.", w / 2, 560);
+
+      ctx.beginPath(); ctx.arc(w / 2, 665, 50, 0, Math.PI * 2);
+      ctx.fillStyle = "#ecfdf5"; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = "#10b981"; ctx.stroke();
+
+      ctx.fillStyle = "#047857"; ctx.font = "bold 20px sans-serif"; ctx.fillText("PASSED", w / 2, 665);
+      ctx.font = "bold 12px sans-serif"; ctx.fillText("OFFICIAL STAMP", w / 2, 683);
+
+      const today = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+      ctx.fillStyle = "#94a3b8"; ctx.font = "18px sans-serif";
+      ctx.fillText(`Date of Completion: ${today}`, w / 2, 775);
+
+      const link = document.createElement('a');
+      link.download = `PPVIC_Certificate_${st.name.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedProgress();
+      renderLevelGrids();
+      showLearnMenu();
+      updateGlobalProgress();
+    });
+  </script>
+</body>
+</html>
